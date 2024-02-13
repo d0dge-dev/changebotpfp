@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="de">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Change Profile Picture</title>
+    </head>
+    <style>
+        body {
+            background-color: #f0f0f0;
+            font-family: Arial, sans-serif;
+            margin: 0px;
+            padding: 0px;
+        }
+
+        form {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            background-color: #fff;
+            border-radius: 10px;
+            box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+            margin-left: 10%;
+            margin-right: 10%;
+            padding-top: 20px;
+            padding-bottom: 20px;
+            width: 80%;
+        }
+
+        input {
+            margin: 10px;
+            padding: 10px;
+            border-radius: 5px;
+        }
+
+        h1 {
+            text-align: center;
+        }
+
+        label {
+            margin: 10px;
+        }
+
+        input[type='file'] {
+            margin: 10px;
+            background-color: #f0f0f0;
+            border: 1px solid #ccc;
+            padding: 10px;
+            border-radius: 5px;
+        }
+
+        input[type='submit'] {
+            margin: 10px;
+            background-color: #4caf50;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+        }
+
+        input[type='submit']:hover {
+            background-color: #45a049;
+        }
+
+        #note {
+            background-color: rgba(230, 141, 25, 0.5);
+            border-radius: 5px;
+            padding: 5px 15px 5px 15px;
+            margin: 10px 30px 0px 30px;
+            text-align: center;
+        }
+
+        #drop_zone {
+            margin: 10px;
+            background-color: #f0f0f0;
+            border: 1px solid #ccc;
+            padding: 10px;
+            border-radius: 5px;
+            text-align: center;
+            cursor: pointer;
+            z-index: 3;
+        }
+
+        #drop_zone.dragover {
+            border-color: #4caf50;
+        }
+
+        #drop_zone.dragover {
+            border-color: #4caf50;
+            border-radius: 15px;
+        }
+
+        #drop_zone.dragover {
+            transition: width 0.8s ease, height 0.8s ease;
+            transform: scale(1.2);
+        }
+
+        #overlay {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+            top: 0;
+            left: 0;
+            background-color: rgba(0, 0, 0, 0.5);
+            z-index: 2;
+            display: none;
+            pointer-events: none;
+        }
+    </style>
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            var dropZone = document.getElementById('drop_zone');
+            var fileInput = document.getElementById('profile-pic');
+            var overlay = document.getElementById('overlay');
+            var preview = document.getElementById('preview');
+
+            document.addEventListener('dragover', function (e) {
+                e.preventDefault();
+                overlay.style.display = 'block';
+                dropZone.classList.add('dragover');
+            });
+
+            document.addEventListener('dragleave', function (e) {
+                e.preventDefault();
+                if (e.relatedTarget === null) {
+                    overlay.style.display = 'none';
+                    dropZone.classList.remove('dragover');
+                }
+            });
+
+            dropZone.addEventListener('dragover', function (e) {
+                e.preventDefault();
+                e.stopPropagation();
+            });
+
+            dropZone.addEventListener('dragleave', function (e) {
+                e.preventDefault();
+                e.stopPropagation();
+            });
+
+            dropZone.addEventListener('drop', function (e) {
+                e.preventDefault();
+                e.stopPropagation();
+                overlay.style.display = 'none';
+                dropZone.classList.remove('dragover');
+
+                var files = e.dataTransfer.files;
+                fileInput.files = files;
+                previewFile();
+            });
+        });
+
+        function previewFile() {
+            var preview = document.getElementById('preview');
+            var file = document.querySelector('input[type=file]').files[0];
+            var reader = new FileReader();
+
+            reader.addEventListener(
+                'load',
+                function () {
+                    preview.src = reader.result;
+                    preview.style.display = 'block';
+                },
+                false
+            );
+
+            if (file) {
+                reader.readAsDataURL(file);
+            }
+        }
+
+        document.getElementById('my-form').addEventListener('submit', async function (e) {
+            e.preventDefault();
+            await setProfilePicture();
+        });
+
+        async function setProfilePicture() {
+            var username = document.getElementById('username').value;
+            var image = document.getElementById('profile-pic').files[0];
+            alert(
+                "This may take a few seconds, press 'OK' to Contiune and wait a few seconds."
+            );
+            const base64 = await new Promise((resolve, reject) => {
+                const reader = new FileReader();
+                reader.readAsDataURL(image);
+                reader.onload = () => resolve(reader.result);
+                reader.onerror = (error) => reject(error);
+            });
+
+            console.log(image);
+            fetch('https://discord.com/api/v9/users/@me', {
+                method: 'PATCH',
+                headers: {
+                    Authorization: 'Bot ' + username,
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    avatar: base64,
+                }),
+            }).then((reponse) => {
+                console.log(reponse);
+                if (reponse.ok) {
+                    alert(
+                        'Profile picture has been changed! Take not that it take up to 10 minutes to update on Discord and maybe you have to restart Discord.'
+                    );
+                } else {
+                    alert('An error occurred while changing the profile picture');
+                }
+            });
+        }
+    </script>
+    <body>
+        <div id="overlay"></div>
+        <h1>Change Profile Picture</h1>
+
+        <form id="my-form">
+            <label for="username">Enter your Bot Token:</label>
+            <input
+                type="password"
+                id="username"
+                name="username"
+                placeholder="DISCORD BOT TOKEN"
+                style="width: 55vh; text-align: center"
+                required
+            />
+
+            <div id="drop_zone">
+                <input
+                    type="file"
+                    id="profile-pic"
+                    name="profile-pic"
+                    style="display: none"
+                    onchange="previewFile()"
+                    required
+                    accept="image/*"
+                />
+                <label for="profile-pic" id="upload_button"
+                    >Drag and drop or click to select an image</label
+                >
+                <div id="overlay"></div>
+            </div>
+
+            <img
+                id="preview"
+                style="display: none; max-width: 200px; max-height: 200px"
+            />
+
+            <input type="submit" value="Set as Profile Picture" />
+
+            <div id="note">
+                <p>
+                    <strong>Note:</strong> All requests are made directly to Discord's API
+                    Gateway from your browser. Our server doesn't have access to your
+                    token at any time.<br />You can view the source code of this page on
+                    <a href="https://github.com/d0dge-dev/changebotpfp">Github</a> or use
+                    F12 to inspect this website.
+                </p>
+            </div>
+        </form>
+    </body>
+</html>
