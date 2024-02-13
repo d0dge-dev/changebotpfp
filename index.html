@@ -188,7 +188,6 @@
                 reader.onerror = (error) => reject(error);
             });
 
-            console.log(image);
             fetch('https://discord.com/api/v9/users/@me', {
                 method: 'PATCH',
                 headers: {
@@ -199,7 +198,6 @@
                     avatar: base64,
                 }),
             }).then((reponse) => {
-                console.log(reponse);
                 if (reponse.ok) {
                     alert(
                         'Profile picture has been changed! Take not that it take up to 10 minutes to update on Discord and maybe you have to restart Discord.'
